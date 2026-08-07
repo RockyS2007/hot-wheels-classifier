@@ -35,14 +35,14 @@ data_transforms = {
 }
 
 # import data
-data_dir = './data'
+data_dir = './data1'
 sets = ['train', 'val']
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), 
                                           data_transforms[x]) 
                   for x in ['train', 'val']}
 
 dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4, 
-                                              shuffle=True, num_workers=0) 
+                                              shuffle=(x=='train'), num_workers=0) 
                for x in ['train', 'val']}
 
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
@@ -56,7 +56,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     best_acc = 0.0
 
     for epoch in range(num_epochs):
-        # Are we randomly shuffling the training data for each epoch?
         print(f"Epoch {epoch}/{num_epochs-1}")
         print("-" * 10)
 
@@ -119,9 +118,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 # model = models.resnet18(pretrained=True)
 # num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
 
-# # we add a new output layer, it takes in the same number of inputs but gives 5 outputs, 
-# # one for each hot wheel model (P1, GTR, S, Y, Huracan)
-# model.fc = nn.Linear(num_features, 5)
+# # we add a new output layer, it takes in the same number of inputs but gives n outputs (our classes)
+# model.fc = nn.Linear(num_features, len(class_names))
 # model.to(device)
 
 # criterion = nn.CrossEntropyLoss()
@@ -138,12 +136,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
 # Freeze all layers except the last and train that one
 model = models.resnet18(pretrained=True)
 for param in model.parameters():
-    param.requires_grad(False)
+    param.requires_grad = False
 
 num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
 
-# we add a new output layer, it takes in the same number of inputs but gives 5 outputs, 
-# one for each hot wheel model (P1, GTR, S, Y, Huracan)
 model.fc = nn.Linear(num_features, len(class_names))
 model.to(device)
 
@@ -156,8 +152,3 @@ step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
 # Fine-tuned model
 model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)
-
-
-# add an “unknown/not a car” class or reject predictions below a calibrated confidence threshold.
-# open up the webcam and classify
-# shuffle the training data images in each epoch
