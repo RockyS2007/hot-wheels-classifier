@@ -1,0 +1,7 @@
+I don't have enough distinct samples of the same car,
+this CNN may be good at classifying my particular models
+but not generalize to someone elses "same" model
+
+
+Transfer learning: https://youtu.be/K0lWSB2QoIQ?si=jbU9MC7XIhw8lxFJ
+Video extraction: https://youtu.be/Ay6Nlb3KJog?si=7MyK2zpsGEzH5Sf4
