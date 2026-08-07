@@ -2,6 +2,17 @@ I don't have enough distinct samples of the same car,
 this CNN may be good at classifying my particular models
 but not generalize to someone elses "same" model
 
+Try to verify using three-fold testing with sets A, B, C
+and find the average and per-fold accuracy
+
+add an “unknown/not a car” class or reject predictions below a calibrated confidence threshold.
+open up the webcam and classify
+shuffle the training data images in each epoch
+
+Run 1, last layer only:
+Training complete in 13m 21.799729s
+Best val Accuracy: 0.6905
+
 
 Transfer learning: https://youtu.be/K0lWSB2QoIQ?si=jbU9MC7XIhw8lxFJ
 Video extraction: https://youtu.be/Ay6Nlb3KJog?si=7MyK2zpsGEzH5Sf4
