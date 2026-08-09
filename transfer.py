@@ -115,31 +115,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 # Fine tuning of whole model
-# model = models.resnet18(pretrained=True)
-# num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
-
-# # we add a new output layer, it takes in the same number of inputs but gives n outputs (our classes)
-# model.fc = nn.Linear(num_features, len(class_names))
-# model.to(device)
-
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.SGD(model.parameters(), lr=0.001)   # stocastic gradient descent, standard learning rate
-
-# # scheduler
-# # every 7 epochs the learning rate is multiplied by the gamma
-# step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
-
-# # Fine-tuned model
-# model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)
-
-
-# Freeze all layers except the last and train that one
 model = models.resnet18(pretrained=True)
-for param in model.parameters():
-    param.requires_grad = False
+num_features = model.fc.in_features # number of features of the last input layer (fc = fully connected)
 
-num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
-
+# we add a new output layer, it takes in the same number of inputs but gives n outputs (our classes)
 model.fc = nn.Linear(num_features, len(class_names))
 model.to(device)
 
@@ -152,3 +131,24 @@ step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
 # Fine-tuned model
 model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)
+
+
+# Freeze all layers except the last and train that one
+# model = models.resnet18(pretrained=True)
+# for param in model.parameters():
+#     param.requires_grad = False
+
+# num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
+
+# model.fc = nn.Linear(num_features, len(class_names))
+# model.to(device)
+
+# criterion = nn.CrossEntropyLoss()
+# optimizer = optim.SGD(model.parameters(), lr=0.001)   # stocastic gradient descent, standard learning rate
+
+# # scheduler
+# # every 7 epochs the learning rate is multiplied by the gamma
+# step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+
+# # Fine-tuned model
+# model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)

@@ -13,6 +13,10 @@ Run 1, last layer only:
 Training complete in 13m 21.799729s
 Best val Accuracy: 0.6905
 
+Run 1, fine-tuning:
+Training complete in 20m 18.121703s
+Best val Accuracy: 0.8000
+
 
 Transfer learning: https://youtu.be/K0lWSB2QoIQ?si=jbU9MC7XIhw8lxFJ
 Video extraction: https://youtu.be/Ay6Nlb3KJog?si=7MyK2zpsGEzH5Sf4
