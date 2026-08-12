@@ -8,11 +8,13 @@ import time
 import os
 import copy
 
+from eval import evaluation
+
 # This Python script performs transfer learning on the ResNet18 model
 # adapting it to perform classification on hotwheels cars
 
-device = torch.device("cpu")    # i don't have a skibidi nvidia gpu
-
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")    # i don't have a skibidi nvidia gpu
+print(f'Device: {device}')
 
 # ResNet18 is trained on ImageNet1k, and expects images to normalize their size and RGB values
 # normalized value = (pixel value - mean) / standard deviation
@@ -31,21 +33,26 @@ data_transforms = {
         transforms.CenterCrop(224),         # take a grid of 224 x 224 from the center of the 256 x 256 image
         transforms.ToTensor(),              # same
         transforms.Normalize(mean, std)     # same
-    ])
+    ]),
+    'test': transforms.Compose([            # same as validation
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+    ]),
 }
 
 # import data
-data_dir = './data1'
-sets = ['train', 'val']
+data_dir = './data'
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), 
                                           data_transforms[x]) 
-                  for x in ['train', 'val']}
+                  for x in ['train', 'val', 'test']}
 
 dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=4, 
                                               shuffle=(x=='train'), num_workers=0) 
-               for x in ['train', 'val']}
+               for x in ['train', 'val', 'test']}
 
-dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
+dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val', 'test']}
 class_names = image_datasets['train'].classes
 print(class_names)
 
@@ -78,17 +85,17 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
+                    _, preds = torch.max(outputs, 1)    # find the highest prediction (note that dim 1 is the rows)
                     loss = criterion(outputs, labels)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
-                        optimizer.zero_grad()
-                        loss.backward()
-                        optimizer.step()
+                        optimizer.zero_grad()   # zero out the old gradients
+                        loss.backward()         # calculate the new gradients
+                        optimizer.step()        # update model weights
 
                 # statistics
-                running_loss += loss.item() * inputs.size(0)
+                running_loss += loss.item() * inputs.size(0)    # <- batch size
                 running_corrects += torch.sum(preds == labels.data)
 
             if phase == 'train':
@@ -115,7 +122,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs=25):
     return model
 
 # Fine tuning of whole model
-model = models.resnet18(pretrained=True)
+model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT) # replace deprecated pretrained=True
 num_features = model.fc.in_features # number of features of the last input layer (fc = fully connected)
 
 # we add a new output layer, it takes in the same number of inputs but gives n outputs (our classes)
@@ -132,23 +139,35 @@ step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 # Fine-tuned model
 model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)
 
+evaluation(model, dataloaders['test'], dataset_sizes['test'], criterion, device)
 
+'''
 # Freeze all layers except the last and train that one
-# model = models.resnet18(pretrained=True)
-# for param in model.parameters():
-#     param.requires_grad = False
+model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+for param in model.parameters():
+    param.requires_grad = False
 
-# num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
+num_features = model.fc.in_features # number of features of the last input layer (fc means fully connected)
 
-# model.fc = nn.Linear(num_features, len(class_names))
-# model.to(device)
+model.fc = nn.Linear(num_features, len(class_names))
+model.to(device)
 
-# criterion = nn.CrossEntropyLoss()
-# optimizer = optim.SGD(model.parameters(), lr=0.001)   # stocastic gradient descent, standard learning rate
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.001)
 
-# # scheduler
-# # every 7 epochs the learning rate is multiplied by the gamma
-# step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+step_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
-# # Fine-tuned model
-# model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)
+# Linear probing model
+model = train_model(model, criterion, optimizer, step_lr_scheduler, num_epochs=20)
+'''
+
+save_run = input('Save the model from this training run? (y/n): ')
+
+if save_run == 'y':
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "class_names": class_names,
+        },
+        "hotwheels_resnet18.pt",
+    )
