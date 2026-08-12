@@ -5,18 +5,27 @@ but not generalize to someone elses "same" model
 Try to verify using three-fold testing with sets A, B, C
 and find the average and per-fold accuracy
 
-add an “unknown/not a car” class or reject predictions below a calibrated confidence threshold.
-open up the webcam and classify
-shuffle the training data images in each epoch
+I ran an evaluation run and got a whopping 47% test accuracy!!!
+basically my model is overfit and my training data sucks...
+for some reason it mixes up all 3 fords and thinks lamborghini's are mustangs
 
-Run 1, last layer only:
+add an “unknown/not a car” class or reject predictions below a calibrated confidence threshold
+
+Run 1, linear probing (20 epochs):
 Training complete in 13m 21.799729s
 Best val Accuracy: 0.6905
-
-Run 1, fine-tuning:
+-------------------------------------
+Run 1, fine-tuning (20 epochs):
 Training complete in 20m 18.121703s
 Best val Accuracy: 0.8000
 
+Run 2, fine-tuning (30 epochs):
+Training complete in 33m 45.846341s
+Best val Accuracy: 0.8189   man what the helly
+
+Run 3, fine-tuning (20 epochs):
+Training complete in 21m 41.886682s
+Best val Accuracy: 0.8122
 
 Transfer learning: https://youtu.be/K0lWSB2QoIQ?si=jbU9MC7XIhw8lxFJ
 Video extraction: https://youtu.be/Ay6Nlb3KJog?si=7MyK2zpsGEzH5Sf4
