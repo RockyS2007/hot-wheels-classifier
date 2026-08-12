@@ -1,4 +1,4 @@
 /raw_video
 /data
-/test_images
+/__pycache__
 .DS_Store
